@@ -1,0 +1,46 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String @default("admin")
+}
+
+model Teacher {
+  id       Int       @id @default(autoincrement())
+  name     String
+  subjects Subject[]
+}
+
+model Pupil {
+  id       Int            @id @default(autoincrement())
+  name     String
+  grade    Int
+  subjects PupilSubject[]
+}
+
+model Subject {
+  id        Int            @id @default(autoincrement())
+  name      String
+  grade     Int
+  teacher   Teacher        @relation(fields: [teacherId], references: [id])
+  teacherId Int
+  pupils    PupilSubject[]
+}
+
+model PupilSubject {
+  pupil     Pupil   @relation(fields: [pupilId], references: [id])
+  pupilId   Int
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  subjectId Int
+
+  @@id([pupilId, subjectId])
+}
