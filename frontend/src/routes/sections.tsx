@@ -9,13 +9,16 @@ import LinearProgress, {
   linearProgressClasses,
 } from "@mui/material/LinearProgress";
 
-import { AuthLayout } from "../layout/auth";
+import { AuthLayout, RequireAuth } from "../layout/auth";
 import { DashboardLayout } from "../layout/dashboard";
 
 export const DashboardPage = lazy(() => import("../pages/dashboard"));
 export const UserPage = lazy(() => import("../pages/user"));
 export const SignInPage = lazy(() => import("../pages/sign-in"));
 export const Page404 = lazy(() => import("../pages/page-not-found"));
+export const TeacherPage = lazy(() => import("../pages/teacher"));
+export const PupilPage = lazy(() => import("../pages/pupil"));
+export const SubjectPage = lazy(() => import("../pages/subject"));
 
 const renderFallback = () => (
   <Box
@@ -41,15 +44,20 @@ const renderFallback = () => (
 export const routesSection: RouteObject[] = [
   {
     element: (
-      <DashboardLayout>
-        <Suspense fallback={renderFallback()}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <RequireAuth>
+        <DashboardLayout>
+          <Suspense fallback={renderFallback()}>
+            <Outlet />
+          </Suspense>
+        </DashboardLayout>
+      </RequireAuth>
     ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "user", element: <UserPage /> },
+      { path: "teacher", element: <TeacherPage /> },
+      { path: "pupil", element: <PupilPage /> },
+      { path: "subject", element: <SubjectPage /> },
     ],
   },
   {

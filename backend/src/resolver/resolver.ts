@@ -10,16 +10,20 @@ import {
   deleteSubject,
   subject,
   subjects,
+  updateSubject,
 } from "../resolver/resolvers/subject.resolver";
 import { teacher, teachers } from "../resolver/resolvers/teacher.resolver";
 import {
+  me,
+  users,
   createUser,
   deleteUser,
-  users,
+  updateUser,
 } from "../resolver/resolvers/user.resolver";
 
 export const resolvers = {
   Query: {
+    me,
     users,
     teacher,
     teachers,
@@ -32,8 +36,10 @@ export const resolvers = {
     login,
     createUser,
     deleteUser,
+    updateUser,
     createSubject,
     deleteSubject,
+    updateSubject,
     assignSubjectToTeacher,
     assignPupilToTeacher,
     assignSubjectToPupil,

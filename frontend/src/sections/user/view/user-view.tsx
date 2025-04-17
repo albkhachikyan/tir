@@ -1,15 +1,16 @@
-import { useState, useCallback } from "react";
-
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import Table from "@mui/material/Table";
-import Button from "@mui/material/Button";
-import TableBody from "@mui/material/TableBody";
-import Typography from "@mui/material/Typography";
-import TableContainer from "@mui/material/TableContainer";
-import TablePagination from "@mui/material/TablePagination";
-
-import { _users } from "../../../_mock";
+import { useState } from "react";
+import {
+  Box,
+  Card,
+  Table,
+  Button,
+  Typography,
+  TableBody,
+  TableContainer,
+  TablePagination,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
 
 import { DashboardContent } from "../../../layout/dashboard";
 import { Iconify } from "../../../components/iconify";
@@ -22,15 +23,29 @@ import { TableEmptyRows } from "../table-empty-rows";
 import { UserTableToolbar } from "../user-table-toolbar";
 import { emptyRows, applyFilter, getComparator } from "../utils";
 
+import { useUsers } from "../../../hooks/users/useUser";
+import { useTable } from "../../../hooks/table/useTable";
+import { UserFormPopover } from "../../../components/popover/Popover";
+
 import type { UserProps } from "../user-table-row";
 
 export function UserView() {
   const table = useTable();
+  const { data: users = [], isLoading, isError } = useUsers();
 
   const [filterName, setFilterName] = useState("");
+  const [newUserAnchor, setNewUserAnchor] = useState<HTMLElement | null>(null);
+
+  const handleOpenNewUser = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setNewUserAnchor(e.currentTarget);
+  };
+
+  const handleCloseNewUser = () => {
+    setNewUserAnchor(null);
+  };
 
   const dataFiltered: UserProps[] = applyFilter({
-    inputData: _users,
+    inputData: users,
     comparator: getComparator(table.order, table.orderBy),
     filterName,
   });
@@ -39,13 +54,7 @@ export function UserView() {
 
   return (
     <DashboardContent>
-      <Box
-        sx={{
-          mb: 5,
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
+      <Box sx={{ mb: 5, display: "flex", alignItems: "center" }}>
         <Typography variant="h4" sx={{ flexGrow: 1 }}>
           Users
         </Typography>
@@ -53,6 +62,7 @@ export function UserView() {
           variant="contained"
           color="inherit"
           startIcon={<Iconify icon="mingcute:add-line" />}
+          onClick={handleOpenNewUser}
         >
           New user
         </Button>
@@ -62,7 +72,7 @@ export function UserView() {
         <UserTableToolbar
           numSelected={table.selected.length}
           filterName={filterName}
-          onFilterName={(event: React.ChangeEvent<HTMLInputElement>) => {
+          onFilterName={(event) => {
             setFilterName(event.target.value);
             table.onResetPage();
           }}
@@ -70,135 +80,69 @@ export function UserView() {
 
         <Scrollbar>
           <TableContainer sx={{ overflow: "unset" }}>
-            <Table sx={{ minWidth: 800 }}>
-              <UserTableHead
-                order={table.order}
-                orderBy={table.orderBy}
-                rowCount={_users.length}
-                numSelected={table.selected.length}
-                onSort={table.onSort}
-                onSelectAllRows={(checked) =>
-                  table.onSelectAllRows(
-                    checked,
-                    _users.map((user) => user.id)
-                  )
-                }
-                headLabel={[
-                  { id: "name", label: "Name" },
-                  { id: "company", label: "Company" },
-                  { id: "role", label: "Role" },
-                  { id: "" },
-                ]}
-              />
-              <TableBody>
-                {dataFiltered
-                  .slice(
-                    table.page * table.rowsPerPage,
-                    table.page * table.rowsPerPage + table.rowsPerPage
-                  )
-                  .map((row) => (
-                    <UserTableRow
-                      key={row.id}
-                      row={row}
-                      selected={table.selected.includes(row.id)}
-                      onSelectRow={() => table.onSelectRow(row.id)}
-                    />
-                  ))}
-
-                <TableEmptyRows
-                  height={68}
-                  emptyRows={emptyRows(
-                    table.page,
-                    table.rowsPerPage,
-                    _users.length
-                  )}
+            {isLoading ? (
+              <Box sx={{ p: 3, textAlign: "center" }}>
+                <CircularProgress />
+              </Box>
+            ) : isError ? (
+              <Box sx={{ p: 3 }}>
+                <Alert severity="error">Failed to load users</Alert>
+              </Box>
+            ) : (
+              <Table sx={{ minWidth: 800 }}>
+                <UserTableHead
+                  order={table.order}
+                  orderBy={table.orderBy}
+                  onSort={table.onSort}
+                  headLabel={[
+                    { id: "name", label: "Name" },
+                    { id: "email", label: "Email" },
+                    { id: "role", label: "Role" },
+                    { id: "action", label: "Actions", align: "right" },
+                  ]}
                 />
+                <TableBody>
+                  {dataFiltered
+                    .slice(
+                      table.page * table.rowsPerPage,
+                      table.page * table.rowsPerPage + table.rowsPerPage
+                    )
+                    .map((row) => (
+                      <UserTableRow
+                        key={row.id}
+                        row={row}
+                        selected={table.selected.includes(row.id)}
+                      />
+                    ))}
 
-                {notFound && <TableNoData searchQuery={filterName} />}
-              </TableBody>
-            </Table>
+                  <TableEmptyRows
+                    height={68}
+                    emptyRows={emptyRows(
+                      table.page,
+                      table.rowsPerPage,
+                      users.length
+                    )}
+                  />
+
+                  {notFound && <TableNoData searchQuery={filterName} />}
+                </TableBody>
+              </Table>
+            )}
           </TableContainer>
         </Scrollbar>
 
         <TablePagination
           component="div"
           page={table.page}
-          count={_users.length}
+          count={users.length}
           rowsPerPage={table.rowsPerPage}
           onPageChange={table.onChangePage}
           rowsPerPageOptions={[5, 10, 25]}
           onRowsPerPageChange={table.onChangeRowsPerPage}
         />
       </Card>
+
+      <UserFormPopover anchorEl={newUserAnchor} onClose={handleCloseNewUser} />
     </DashboardContent>
   );
-}
-
-export function useTable() {
-  const [page, setPage] = useState(0);
-  const [orderBy, setOrderBy] = useState("name");
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
-
-  const onSort = useCallback(
-    (id: string) => {
-      const isAsc = orderBy === id && order === "asc";
-      setOrder(isAsc ? "desc" : "asc");
-      setOrderBy(id);
-    },
-    [order, orderBy]
-  );
-
-  const onSelectAllRows = useCallback(
-    (checked: boolean, newSelecteds: string[]) => {
-      if (checked) {
-        setSelected(newSelecteds);
-        return;
-      }
-      setSelected([]);
-    },
-    []
-  );
-
-  const onSelectRow = useCallback(
-    (inputValue: string) => {
-      const newSelected = selected.includes(inputValue)
-        ? selected.filter((value) => value !== inputValue)
-        : [...selected, inputValue];
-
-      setSelected(newSelected);
-    },
-    [selected]
-  );
-
-  const onResetPage = useCallback(() => {
-    setPage(0);
-  }, []);
-
-  const onChangePage = useCallback((event: unknown, newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const onChangeRowsPerPage = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      setRowsPerPage(parseInt(event.target.value, 10));
-      onResetPage();
-    },
-    [onResetPage]
-  );
-
-  return {
-    page,
-    order,
-    onSort,
-    orderBy,
-    selected,
-    rowsPerPage,
-    onSelectRow,
-    onResetPage,
-    onChangePage,
-    onSelectAllRows,
-    onChangeRowsPerPage,
-  };
 }

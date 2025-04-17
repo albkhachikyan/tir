@@ -5,6 +5,7 @@ import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
 import App from "./App.tsx";
 import { ErrorBoundary } from "./routes/components/index.ts";
 import { routesSection } from "./routes/sections.tsx";
+import { Providers } from "./provider/provider.tsx";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,8 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Providers>
+      <RouterProvider router={router} />
+    </Providers>
   </StrictMode>
 );

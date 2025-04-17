@@ -1,57 +1,78 @@
-import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
-import InputAdornment from "@mui/material/InputAdornment";
-
-import { useRouter } from "../../routes/hooks";
-
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  IconButton,
+  InputAdornment,
+} from "@mui/material";
+import { useState } from "react";
 import { Iconify } from "../../components/iconify";
+import { useRouter } from "../../routes/hooks";
+import { useLogin } from "../../hooks/auth/useLogin";
+import { LoginForm, loginSchema } from "../../schema/validation/login";
 
 export function SignInView() {
   const router = useRouter();
-
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSignIn = useCallback(() => {
-    router.push("/");
-  }, [router]);
+  const { mutate: login } = useLogin();
 
-  const renderForm = (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "flex-end",
-        flexDirection: "column",
-      }}
-    >
-      <TextField
-        fullWidth
-        name="email"
-        label="Email address"
-        defaultValue="hello@gmail.com"
-        sx={{ mb: 3 }}
-        slotProps={{
-          inputLabel: { shrink: true },
-        }}
-      />
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: yupResolver(loginSchema),
+  });
 
-      <TextField
-        fullWidth
-        name="password"
-        label="Password"
-        defaultValue="@demo1234"
-        type={showPassword ? "text" : "password"}
-        slotProps={{
-          inputLabel: { shrink: true },
-          input: {
+  const onSubmit = async (data: LoginForm) => {
+    try {
+      login(data, {
+        onSuccess: () => {
+          router.push("/");
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Login failed");
+    }
+  };
+
+  return (
+    <>
+      <Box sx={{ textAlign: "center", mb: 5 }}>
+        <Typography variant="h5">Sign in</Typography>
+      </Box>
+
+      <Box
+        component="form"
+        onSubmit={handleSubmit(onSubmit)}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
+        <TextField
+          label="Email"
+          fullWidth
+          {...register("email")}
+          error={!!errors.email}
+          helperText={errors.email?.message}
+        />
+
+        <TextField
+          label="Password"
+          type={showPassword ? "text" : "password"}
+          fullWidth
+          {...register("password")}
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((prev) => !prev)}
                   edge="end"
                 >
                   <Iconify
@@ -62,38 +83,13 @@ export function SignInView() {
                 </IconButton>
               </InputAdornment>
             ),
-          },
-        }}
-        sx={{ mb: 3 }}
-      />
+          }}
+        />
 
-      <Button
-        fullWidth
-        size="large"
-        type="submit"
-        color="inherit"
-        variant="contained"
-        onClick={handleSignIn}
-      >
-        Sign in
-      </Button>
-    </Box>
-  );
-
-  return (
-    <>
-      <Box
-        sx={{
-          gap: 1.5,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          mb: 5,
-        }}
-      >
-        <Typography variant="h5">Sign in</Typography>
+        <Button type="submit" variant="contained" size="large" fullWidth>
+          Sign in
+        </Button>
       </Box>
-      {renderForm}
     </>
   );
 }

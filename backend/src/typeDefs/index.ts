@@ -43,6 +43,7 @@ export const typeDefs = gql`
   }
 
   type Query {
+    me: User!
     users: [User!]!
 
     teachers(name: String): [Teacher!]!
@@ -65,10 +66,11 @@ export const typeDefs = gql`
       role: Role!
       grade: Int
     ): User!
-
+    updateUser(id: ID!, name: String, email: String): User!
     deleteUser(id: ID!): Boolean!
 
     createSubject(name: String!, grade: Int!): Subject!
+    updateSubject(id: ID!, name: String, grade: Int): Subject!
     deleteSubject(id: ID!): Boolean!
 
     assignSubjectToTeacher(teacherId: ID!, subjectId: ID!): Teacher!

@@ -160,10 +160,6 @@ export function NavContent({ data, slots, sx }: NavContentProps) {
                       }),
                     ]}
                   >
-                    <Box component="span" sx={{ width: 24, height: 24 }}>
-                      {item.icon}
-                    </Box>
-
                     <Box component="span" sx={{ flexGrow: 1 }}>
                       {item.title}
                     </Box>

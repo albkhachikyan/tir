@@ -21,6 +21,8 @@ import { AccountPopover } from "../components/account-popover";
 import type { MainSectionProps } from "../core/main-section";
 import type { HeaderSectionProps } from "../core/header-section";
 import type { LayoutSectionProps } from "../core/layout-section";
+import { useMe } from "../../hooks/auth/useMe";
+import { useMemo } from "react";
 
 type LayoutBaseProps = Pick<LayoutSectionProps, "sx" | "children" | "cssVars">;
 
@@ -40,6 +42,13 @@ export function DashboardLayout({
   layoutQuery = "lg",
 }: DashboardLayoutProps) {
   const theme = useTheme();
+
+  const { data: user } = useMe();
+
+  const filteredNavData = useMemo(() => {
+    if (!user?.role) return [];
+    return navData.filter((item) => item.roles.includes(user.role));
+  }, [user?.role]);
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
@@ -66,7 +75,7 @@ export function DashboardLayout({
               [theme.breakpoints.up(layoutQuery)]: { display: "none" },
             }}
           />
-          <NavMobile data={navData} open={open} onClose={onClose} />
+          <NavMobile data={filteredNavData} open={open} onClose={onClose} />
         </>
       ),
       rightArea: (
@@ -103,7 +112,9 @@ export function DashboardLayout({
   return (
     <LayoutSection
       headerSection={renderHeader()}
-      sidebarSection={<NavDesktop data={navData} layoutQuery={layoutQuery} />}
+      sidebarSection={
+        <NavDesktop data={filteredNavData} layoutQuery={layoutQuery} />
+      }
       footerSection={renderFooter()}
       cssVars={{ ...dashboardLayoutVars(theme), ...cssVars }}
       sx={[

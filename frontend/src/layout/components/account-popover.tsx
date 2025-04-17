@@ -14,7 +14,9 @@ import MenuItem, { menuItemClasses } from "@mui/material/MenuItem";
 
 import { useRouter, usePathname } from "../../routes/hooks";
 
-import { _myAccount } from "../../_mock";
+import { useLogout } from "../../hooks/auth/useLogout";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../hooks/auth/useMe";
 
 export type AccountPopoverProps = IconButtonProps & {
   data?: {
@@ -31,8 +33,13 @@ export function AccountPopover({
   ...other
 }: AccountPopoverProps) {
   const router = useRouter();
-
   const pathname = usePathname();
+  const logout = useLogout();
+
+  const { data: account } = useQuery({
+    queryKey: ["user"],
+    queryFn: getMe,
+  });
 
   const [openPopover, setOpenPopover] = useState<HTMLButtonElement | null>(
     null
@@ -72,11 +79,11 @@ export function AccountPopover({
         {...other}
       >
         <Avatar
-          src={_myAccount.photoURL}
-          alt={_myAccount.displayName}
+          src={account?.photoURL}
+          alt={account?.name}
           sx={{ width: 1, height: 1 }}
         >
-          {_myAccount.displayName.charAt(0).toUpperCase()}
+          {account?.name.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
 
@@ -94,11 +101,11 @@ export function AccountPopover({
       >
         <Box sx={{ p: 2, pb: 1.5 }}>
           <Typography variant="subtitle2" noWrap>
-            {_myAccount?.displayName}
+            {account?.name}
           </Typography>
 
           <Typography variant="body2" sx={{ color: "text.secondary" }} noWrap>
-            {_myAccount?.email}
+            {account?.email}
           </Typography>
         </Box>
 
@@ -140,7 +147,13 @@ export function AccountPopover({
         <Divider sx={{ borderStyle: "dashed" }} />
 
         <Box sx={{ p: 1 }}>
-          <Button fullWidth color="error" size="medium" variant="text">
+          <Button
+            fullWidth
+            color="error"
+            size="medium"
+            variant="text"
+            onClick={logout}
+          >
             Logout
           </Button>
         </Box>
