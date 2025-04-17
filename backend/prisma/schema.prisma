@@ -1,46 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+enum Role {
+  ADMIN
+  TEACHER
+  PUPIL
 }
 
 model User {
   id       Int    @id @default(autoincrement())
-  username String @unique
+  email    String @unique
   password String
-  role     String @default("admin")
+  name     String
+  role     Role
+
+  teacher   Teacher? @relation(fields: [teacherId], references: [id])
+  teacherId Int?     @unique
+
+  pupil   Pupil? @relation(fields: [pupilId], references: [id])
+  pupilId Int?   @unique
 }
 
 model Teacher {
   id       Int       @id @default(autoincrement())
   name     String
-  subjects Subject[]
+  user     User?     @relation()
+  subjects Subject[] @relation("TeacherSubjects")
+  pupils   Pupil[]   @relation("TeacherPupils")
 }
 
 model Pupil {
-  id       Int            @id @default(autoincrement())
+  id       Int       @id @default(autoincrement())
   name     String
   grade    Int
-  subjects PupilSubject[]
+  user     User?     @relation()
+  subjects Subject[] @relation("PupilSubjects")
+  teachers Teacher[] @relation("TeacherPupils")
 }
 
 model Subject {
-  id        Int            @id @default(autoincrement())
-  name      String
-  grade     Int
-  teacher   Teacher        @relation(fields: [teacherId], references: [id])
-  teacherId Int
-  pupils    PupilSubject[]
-}
-
-model PupilSubject {
-  pupil     Pupil   @relation(fields: [pupilId], references: [id])
-  pupilId   Int
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  subjectId Int
-
-  @@id([pupilId, subjectId])
+  id       Int       @id @default(autoincrement())
+  name     String
+  grade    Int
+  teachers Teacher[] @relation("TeacherSubjects")
+  pupils   Pupil[]   @relation("PupilSubjects")
 }

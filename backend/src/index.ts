@@ -3,13 +3,13 @@ import cors from "cors";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 
-import { typeDefs } from "./graphql/typeDefs";
-import { resolvers } from "./graphql/resolver";
-import { context } from "./context";
+import { typeDefs } from "./typeDefs";
+import { resolvers } from "./resolver/resolver";
+import { createContext } from "./context";
 
 const PORT = process.env.PORT || 8000;
 
-async function startServer() {
+const startServer = async () => {
   const app = express();
   const server = new ApolloServer({
     typeDefs,
@@ -18,19 +18,21 @@ async function startServer() {
 
   await server.start();
 
-  app.use(cors());
-  app.use(express.json());
-
   app.use(
     "/graphql",
+    cors(),
+    express.json(),
     expressMiddleware(server, {
-      context: async () => context,
+      context: createContext,
     })
   );
 
   app.listen(PORT, () => {
     console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
   });
-}
+};
 
 startServer();
+
+// TODO make factory for this service
+// TODO check clean code
